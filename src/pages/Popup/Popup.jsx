@@ -1,12 +1,17 @@
 import React from 'react';
-import logo from '../../assets/img/logo.svg';
-import { Button } from 'antd';
+import { TimePicker } from 'antd';
+import useTodayRecord from './hooks/useTodayRecord';
 
 const Popup = () => {
+  const {startTime,leaveTime} = useTodayRecord();
+  
   return (
-    <div className="App">
-      <div className=' text-red-500 '>232123</div>
-      <Button>demo</Button>
+    <div className="App p-4 w-[300px] h-[400px]">
+      开始时间： <TimePicker value={startTime} disabled/>
+      <br/>
+      持续时间：min
+      <br/>
+      预计时间：<TimePicker value={leaveTime} disabled/>
     </div>
   );
 };
