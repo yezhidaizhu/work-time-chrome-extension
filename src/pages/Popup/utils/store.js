@@ -1,16 +1,18 @@
 import { getCurDateTime, recordDateFormatKey } from "./helper";
 
 const RecordList_Key = "recordlist";
+const UserSetting_Key = "userSetting";
+
 
 // set
-export function setStore(data){
+export function setStore(data) {
   chrome.storage.local.set(data)
 };
-export function getStore(key){
+export function getStore(key) {
   return chrome.storage.local.get(key)
 };
 
-export function clearStore(){
+export function clearStore() {
   chrome.storage.clearStore();
 }
 
@@ -19,32 +21,32 @@ export function clearStore(){
  * 记录要记录的信息
  * key: 时间，格式为 2023-04-19，或者其它时间类型
  */
-export async function record(data={
-  start:"", // 开始时间
-  end:"", // 结束时间
-},date=new Date()){
+export async function record(data = {
+  start: "", // 开始时间
+  end: "", // 结束时间
+}, date = new Date()) {
   const dateStr = recordDateFormatKey(date);
 
   const recordData = {
-    start: data?.start ? getCurDateTime(data?.start) : "" ,
-    end: data?.end ? getCurDateTime(data?.end) : "" ,
+    start: data?.start ? getCurDateTime(data?.start) : "",
+    end: data?.end ? getCurDateTime(data?.end) : "",
     updated: getCurDateTime(),
   }
   const records = await getRecordList();
   // 创建时间
-  if(!records[dateStr]?.created){
-    Object.assign(recordData,{created:getCurDateTime()})
+  if (!records[dateStr]?.created) {
+    Object.assign(recordData, { created: getCurDateTime() })
   }
-  Object.assign(records,{[dateStr]: recordData})
-  await setStore({[RecordList_Key]:records});
+  Object.assign(records, { [dateStr]: recordData })
+  await setStore({ [RecordList_Key]: records });
 }
 
 /**
  * 获取指定日期下的记录
  */
-export async function getRecord(date=new Date()){
+export async function getRecord(date = new Date()) {
   const key = recordDateFormatKey(date);
-  const records =await getRecordList();
+  const records = await getRecordList();
   return records?.[key];
 }
 
@@ -59,7 +61,7 @@ export async function getRecord(date=new Date()){
  * }
  * 返回的是一个对象
  */
-export async function getRecordList(){
+export async function getRecordList() {
   const _rds = await getStore([RecordList_Key]);
   return _rds?.[RecordList_Key] || {};
 }
@@ -68,15 +70,35 @@ export async function getRecordList(){
  * 记录chrome 当天最早启动时间
  * 为工时开始
  */
-export async function setTodayStartTime(){
+export async function setTodayStartTime() {
   // 查看今天记录了没有
-  const today =await getRecord();
-  if(!today?.start){
+  const today = await getRecord();
+  if (!today?.start) {
     // 记录
-    record({start: getCurDateTime()})
+    record({ start: getCurDateTime() })
   }
 }
 
 
+/**
+ * 目前不考虑跨天数，只考虑一天内的
+ * @returns {
+ *    workStart // 工作开始时间 date
+ *    workEnd   // 结束时间 date
+ *    workRestArr  // 休息时间，不计算在工作内的时间，可以有多个时间段   [[date,date],[date,date]]
+ * }
+ */
+export async function getUserSetting() {
+  const _rds = await getStore([UserSetting_Key]);
+  return _rds?.[UserSetting_Key] || {};
+}
 
+export async function setUserSetting(data = {}) {
+  const newSetting = { ...data };
+
+  const oldSetting = await getUserSetting();
+  Object.assign(oldSetting, newSetting);
+
+  return setStore({ [UserSetting_Key]: oldSetting });
+}
 

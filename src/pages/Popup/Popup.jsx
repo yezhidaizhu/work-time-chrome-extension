@@ -1,19 +1,34 @@
 import React from 'react';
-import { TimePicker } from 'antd';
-import useTodayRecord from './hooks/useTodayRecord';
+import {
+  createHashRouter,
+  RouterProvider,
+} from "react-router-dom";
+
+import Index from './pages';
+import Setting from './pages/Setting';
+
+const router = createHashRouter([
+  {
+    path: "/",
+    element: <Index />,
+  },
+  {
+    path: "/setting",
+    element: <Setting />,
+  },
+]);
 
 const Popup = () => {
-  const {startTime,leaveTime} = useTodayRecord();
-  
   return (
-    <div className="App p-4 w-[300px] h-[400px]">
-      开始时间： <TimePicker value={startTime} disabled/>
-      <br/>
-      持续时间：min
-      <br/>
-      预计时间：<TimePicker value={leaveTime} disabled/>
+    <div className="App p-2 w-[300px] h-[400px]">
+      <RouterProvider router={router} />
     </div>
   );
 };
 
 export default Popup;
+/**
+ * 去除的时间段 [a,b]
+ * 开始时间
+ * 结束时间
+ */
