@@ -1,9 +1,18 @@
 /* eslint-disable  */
 import React, { useEffect, useState } from 'react';
-import { Button, Checkbox, Form, Input, TimePicker, message } from 'antd';
+import {
+  Button,
+  Checkbox,
+  Form,
+  Input,
+  TimePicker,
+  message,
+  InputNumber,
+} from 'antd';
 import { MinusCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
-import dayjs from "dayjs";
-import useSeting from "../Popup/hooks/useSetting";
+import dayjs from 'dayjs';
+//@ts-ignore
+import useSeting from '../Popup/hooks/useSetting';
 
 const formItemLayoutWithOutLabel = {
   wrapperCol: {
@@ -12,40 +21,55 @@ const formItemLayoutWithOutLabel = {
   },
 };
 
+const formatTimeStr = 'HH:mm:ss';
+
 const Options: React.FC = () => {
   const [form] = Form.useForm();
-  const restTimesValues = Form.useWatch("restTimes", form);
+  const restTimesValues = Form.useWatch('restTimes', form);
 
-  const { setting, setUserSetting } = useSeting()
+  const { setting, setUserSetting } = useSeting();
 
   const onFinish = (values: any) => {
     const workTime = values?.workTime;
     const _setting = {
-      workStart: workTime?.[0]?.format?.('HH:mm:ss') || dayjs('00:00:00', 'HH:mm:ss').format('HH:mm:ss'),
-      workEnd: workTime?.[1]?.format?.('HH:mm:ss') || dayjs('11:59:59', 'HH:mm:ss').format('HH:mm:ss'),
-      workRestArr: values?.restTimes?.map((timeArr: any) => {
-        const [timeStart, timeEnd] = timeArr;
-        return [dayjs(timeStart).format('HH:mm:ss'), dayjs(timeEnd).format('HH:mm:ss')]
-      }) ?? []
-    }
-    console.log("save: ", _setting);
-    setUserSetting(_setting)
-    message.success("保存成功")
+      workStart:
+        workTime?.[0]?.format?.(formatTimeStr) ||
+        dayjs('00:00:00', formatTimeStr).format(formatTimeStr),
+      workEnd:
+        workTime?.[1]?.format?.(formatTimeStr) ||
+        dayjs('11:59:59', formatTimeStr).format(formatTimeStr),
+      workRestArr:
+        values?.restTimes?.map((timeArr: any) => {
+          const [timeStart, timeEnd] = timeArr;
+          return [
+            dayjs(timeStart).format(formatTimeStr),
+            dayjs(timeEnd).format(formatTimeStr),
+          ];
+        }) ?? [],
+      workLong: values?.workLong,
+    };
+    console.log('save: ', _setting);
+    setUserSetting(_setting);
+    message.success('保存成功');
   };
 
   useEffect(() => {
-    const fomatTime = (times = ["", ""]) => {
-      return [dayjs(times[0], 'HH:mm:ss'), dayjs(times[1], 'HH:mm:ss')]
-    }
+    const fomatTime = (times = ['', '']) => {
+      return [dayjs(times[0], formatTimeStr), dayjs(times[1], formatTimeStr)];
+    };
     form.setFieldsValue({
-      workTime: fomatTime([setting?.workStart || '00:00:00', setting?.workEnd || '23:59:59']),
-      restTimes: setting?.workRestArr?.map(fomatTime)
-    })
-  }, [setting])
+      workTime: fomatTime([
+        setting?.workStart || '00:00:00',
+        setting?.workEnd || '23:59:59',
+      ]),
+      restTimes: setting?.workRestArr?.map(fomatTime),
+      workLong: setting?.workLong,
+    });
+  }, [setting]);
 
   useEffect(() => {
-    setting && console.log("user", setting);
-  }, [setting])
+    setting && console.log('user', setting);
+  }, [setting]);
 
   return (
     <div className="p-4">
@@ -55,6 +79,9 @@ const Options: React.FC = () => {
         labelCol={{ span: 8 }}
         wrapperCol={{ span: 16 }}
         style={{ maxWidth: 500 }}
+        initialValues={{
+          workLong: 8,
+        }}
         onFinish={onFinish}
       >
         <Form.Item
@@ -63,36 +90,51 @@ const Options: React.FC = () => {
           required
           rules={[{ required: true, message: '请选择时间' }]}
         >
-          <TimePicker.RangePicker />
+          <TimePicker.RangePicker format={formatTimeStr} />
+        </Form.Item>
+
+        <Form.Item
+          label="工作时长"
+          name="workLong"
+          required
+          rules={[{ required: true, message: '请输入工作时长' }]}
+        >
+          <InputNumber />
         </Form.Item>
 
         <Form.List name="restTimes">
           {(fields, { add, remove }) => (
             <>
-              {
-                fields?.map((field, index) => (
-                  <Form.Item
-                    {...(index === 0 ? {} : formItemLayoutWithOutLabel)}
-                    label={index === 0 ? '休息时间' : ''}
-                    labelCol={{ span: 8 }}
-                    key={field.key}
+              {fields?.map((field, index) => (
+                <Form.Item
+                  {...(index === 0 ? {} : formItemLayoutWithOutLabel)}
+                  label={index === 0 ? '休息时间' : ''}
+                  labelCol={{ span: 8 }}
+                  key={field.key}
+                >
+                  <div className="flex space-x-2">
+                    <Form.Item
+                      {...field}
+                      noStyle
+                      rules={[{ required: true, message: '请选择时间' }]}
+                    >
+                      <TimePicker.RangePicker format={formatTimeStr} />
+                    </Form.Item>
 
-                  >
-                    <div className='flex space-x-2'>
-                      <Form.Item {...field} noStyle rules={[{ required: true, message: '请选择时间' }]}>
-                        <TimePicker.RangePicker />
-                      </Form.Item>
+                    <Minus
+                      className="mt-1"
+                      onClick={() => remove(field.name)}
+                    />
+                  </div>
+                </Form.Item>
+              ))}
 
-                      <Minus
-                        className="mt-1"
-                        onClick={() => remove(field.name)}
-                      />
-                    </div>
-                  </Form.Item>
-                ))
-              }
-
-              <Form.Item {...(!restTimesValues?.length ? {} : formItemLayoutWithOutLabel)} label={restTimesValues?.length ? "" : "休息时间"} >
+              <Form.Item
+                {...(!restTimesValues?.length
+                  ? {}
+                  : formItemLayoutWithOutLabel)}
+                label={restTimesValues?.length ? '' : '休息时间'}
+              >
                 <Button
                   type="dashed"
                   onClick={() => add()}
@@ -104,9 +146,7 @@ const Options: React.FC = () => {
               </Form.Item>
             </>
           )}
-
         </Form.List>
-
 
         <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
           <Button type="primary" htmlType="submit">
@@ -120,21 +160,19 @@ const Options: React.FC = () => {
 
 export default Options;
 
-
 function Add(props: any) {
-  return <Button
-    size="small"
-    type="text"
-    icon={<PlusCircleOutlined />}
-    {...props}
-  />
+  return (
+    <Button size="small" type="text" icon={<PlusCircleOutlined />} {...props} />
+  );
 }
 
 function Minus(props: any) {
-  return <Button
-    size="small"
-    type="text"
-    icon={<MinusCircleOutlined />}
-    {...props}
-  />
+  return (
+    <Button
+      size="small"
+      type="text"
+      icon={<MinusCircleOutlined />}
+      {...props}
+    />
+  );
 }

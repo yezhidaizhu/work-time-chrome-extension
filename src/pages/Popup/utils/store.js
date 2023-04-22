@@ -20,24 +20,27 @@ export function clearStore() {
 /**
  * 记录要记录的信息
  * key: 时间，格式为 2023-04-19，或者其它时间类型
+ * start: "", // 开始时间
+ * end: "", // 结束时间
  */
-export async function record(data = {
-  start: "", // 开始时间
-  end: "", // 结束时间
-}, date = new Date()) {
+export async function record(data = {}, date = new Date()) {
   const dateStr = recordDateFormatKey(date);
 
-  const recordData = {
-    start: data?.start ? getCurDateTime(data?.start) : "",
-    end: data?.end ? getCurDateTime(data?.end) : "",
+  const newRecordData = {
+    ...data,
     updated: getCurDateTime(),
   }
   const records = await getRecordList();
+
+  const todayRecord = records[dateStr] || {};
+
   // 创建时间
-  if (!records[dateStr]?.created) {
-    Object.assign(recordData, { created: getCurDateTime() })
+  if (!todayRecord?.created) {
+    Object.assign(todayRecord, { created: getCurDateTime() })
   }
-  Object.assign(records, { [dateStr]: recordData })
+  Object.assign(todayRecord,newRecordData)
+  Object.assign(records, { [dateStr]: todayRecord})
+  console.log("records",records);
   await setStore({ [RecordList_Key]: records });
 }
 
@@ -56,6 +59,7 @@ export async function getRecord(date = new Date()) {
  *    [timeline]:{
  *        start: "",
  *        end: "",
+ *        duration: "", // 工作累计时长
  *        created: "", // 创建该数据时间
  *    }
  * }
@@ -86,6 +90,7 @@ export async function setTodayStartTime() {
  *    workStart // 工作开始时间 date
  *    workEnd   // 结束时间 date
  *    workRestArr  // 休息时间，不计算在工作内的时间，可以有多个时间段   [[date,date],[date,date]]
+ *    workLong // 工作时长
  * }
  */
 export async function getUserSetting() {

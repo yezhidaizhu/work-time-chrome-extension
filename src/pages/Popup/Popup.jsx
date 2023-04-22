@@ -1,28 +1,36 @@
 import React from 'react';
-import {
-  createHashRouter,
-  RouterProvider,
-} from "react-router-dom";
+import { createHashRouter, RouterProvider } from 'react-router-dom';
+import zhCN from 'antd/locale/zh_CN';
+import { ConfigProvider, theme } from 'antd';
 
 import Index from './pages';
-import Setting from './pages/Setting';
+import { useAppState } from './store';
+import { useMemo } from 'react';
+import useTheme from './hooks/useTheme';
 
 const router = createHashRouter([
   {
-    path: "/",
+    path: '/',
     element: <Index />,
-  },
-  {
-    path: "/setting",
-    element: <Setting />,
   },
 ]);
 
 const Popup = () => {
+  const {algorithm,isDark} = useTheme()
+
   return (
-    <div className="App p-2 w-[300px] h-[400px]">
-      <RouterProvider router={router} />
-    </div>
+      <ConfigProvider
+        locale={zhCN}
+        theme={{
+          algorithm: algorithm,
+        }}
+      >
+        <div className={`${isDark ? "bg-gray-900":""}`}>
+          <div className="App p-2 w-[300px] h-[400px] overflow-hidden">
+            <RouterProvider router={router} />
+          </div>
+        </div>
+      </ConfigProvider>
   );
 };
 
